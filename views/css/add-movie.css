@@ -1,0 +1,61 @@
+section#add-movie {
+    padding: 40px 0;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 40px 0;
+}
+
+section#add-movie h2 {
+    font-size: 2rem;
+    color: #6200ea;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+section#add-movie form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+section#add-movie form input,
+section#add-movie form textarea {
+    padding: 15px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+section#add-movie form input:focus,
+section#add-movie form textarea:focus {
+    border-color: #6200ea;
+    box-shadow: 0 0 8px rgba(98, 0, 234, 0.2);
+}
+
+section#add-movie form textarea {
+    resize: vertical;
+    min-height: 150px;
+}
+
+section#add-movie form button {
+    padding: 15px;
+    font-size: 1.1rem;
+    background-color: #6200ea;
+    color: white;
+    border-radius: 10px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+section#add-movie form button:hover {
+    background-color: #3700b3;
+    transform: translateY(-2px);
+}
+
+section#add-movie form button:active {
+    transform: translateY(0);
+}

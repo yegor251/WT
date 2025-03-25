@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Collection</title>
+    <link rel="stylesheet" href="/films/views/css/reset.css">
+    <link rel="stylesheet" href="/films/views/css/global.css">
+    <link rel="stylesheet" href="/films/views/css/header.css">
+    <link rel="stylesheet" href="/films/views/css/movie-list.css">
+    <link rel="stylesheet" href="/films/views/css/add-movie.css">
+</head>
+<body>
+<header>
+    <h1>Movie Collection</h1>
+    <nav>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="#" class="nav-link active">About</a></li>
+            <li class="nav-item"><a href="#" class="nav-link">Genres</a></li>
+            <li class="nav-item"><a href="#" class="nav-link">Add Movie</a></li>
+            <li class="nav-item"><a href="#" class="nav-link">Contacts</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section id="movie-list">
+    <h2>Our Movies</h2>
+    <div class="movie-grid">
+        {{ if !empty($movies) }}
+        {{ foreach $movies as $index => $movie }}
+        <div class="movie-item" data-id="{{ $index + 1 }}">
+            <h3>{{ $movie['title'] }}</h3>
+            <p class="description">{{ $movie['description'] }}</p>
+            <p class="release-year">{{ $movie['release_year'] }}</p>
+        </div>
+        {{ endforeach }}
+        {{ else }}
+        <p>No movies available.</p>
+        {{ endif }}
+    </div>
+</section>
+
+<section id="add-movie">
+    <h2>Add a Movie</h2>
+    <form action="/films/add-movie" method="POST">
+        <input type="text" name="title" placeholder="Title" required>
+        <textarea name="description" placeholder="Description" required></textarea>
+        <input type="number" name="release_year" placeholder="Release Year" required>
+        <button type="submit">Add Movie</button>
+    </form>
+</section>
+</body>
+</html>
