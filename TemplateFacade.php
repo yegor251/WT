@@ -2,72 +2,59 @@
 
 class TemplateFacade
 {
-    private $cacheDir;
-
-    public function __construct($cacheDir = __DIR__ . '/cache'){
-        $this->cacheDir = $cacheDir;
-        if(!file_exists($this->cacheDir)){
-            mkdir($this->cacheDir,0777,true);
-        }
-    }
-
-    /**
-     * Рендерит шаблон с данными
-     *
-     * @param string $templatePath - Путь к шаблону
-     * @param array $data - Данные для подстановки
-     * @return string - Готовый HTML
-     * @throws Exception
-     */
     public function render(string $templatePath, array $data): string
     {
-        if(!file_exists($templatePath)){
-            throw new Exception("Temp1late $templatePath not found");
+        if (!file_exists($templatePath)) {
+            throw new Exception("Template {$templatePath} not found");
         }
 
-        $cacheFile = $this->cacheDir . DIRECTORY_SEPARATOR . md5($templatePath) . '.php';
-        if(file_exists($cacheFile) && filemtime($cacheFile) <= filemtime($templatePath)){
-            return $this->executeTemplate($cacheFile, $data);
+        $templateContent = file_get_contents($templatePath);
+        $phpCode = $this->convertToPhp($templateContent);
+        return $this->generateOutput($phpCode, $data);
+    }
+
+    private function convertToPhp(string $template): string
+    {
+        $replacements = [
+            // Обработка if-else условий
+            '/{{ if (.*?) }}(.*?)({{ else }}(.*?))?{{ endif }}/s' =>
+                function($m) {
+                    $else = isset($m[4]) ? "<?php else: ?>{$m[4]}" : '';
+                    return "<?php if ({$m[1]}): ?>{$m[2]}{$else}<?php endif; ?>";
+                },
+
+            // Обработка foreach циклов
+            '/{{ foreach (.*?) }}(.*?){{ endforeach }}/s' =>
+                function($m) {
+                    return "<?php foreach ({$m[1]}): ?>{$m[2]}<?php endforeach; ?>";
+                },
+
+            // Обработка переменных
+            '/{{\s*(.+?)\s*}}/' =>
+                function($m) {
+                    return "<?php echo htmlspecialchars({$m[1]}, ENT_QUOTES, 'UTF-8'); ?>";
+                }
+        ];
+
+        foreach ($replacements as $pattern => $callback) {
+            $template = preg_replace_callback($pattern, $callback, $template);
         }
 
-        $html = $this->compileTemplate($templatePath);
-
-        file_put_contents($cacheFile, $html);
-
-        return $this->executeTemplate($cacheFile, $data);
+        return $template;
     }
 
-    /**
-     * Компилирует шаблон в PHP-код
-     */
-    private function compileTemplate($templatePath) {
-        $html = file_get_contents($templatePath);
-
-        $html = preg_replace_callback('/{{ if (.*?) }}(.*?)({{ else }}(.*?))?{{ endif }}/s', function ($matches) {
-            $condition = trim($matches[1]);
-            $ifContent = $matches[2];
-            $elseContent = $matches[4] ?? '';
-            return "<?php if ($condition): ?>$ifContent<?php else: ?>$elseContent<?php endif; ?>";
-        }, $html);
-
-        $html = preg_replace_callback('/{{ foreach (.*?) }}(.*?){{ endforeach }}/s', function ($matches) {
-            $iteration = trim($matches[1]);
-            $content = $matches[2];
-            return "<?php foreach ($iteration): ?>$content<?php endforeach; ?>";
-        }, $html);
-
-        return preg_replace_callback('/{{\s*(.+?)\s*}}/', function ($matches) {
-            $expression = trim($matches[1]);
-            return "<?php echo htmlspecialchars($expression, ENT_QUOTES, 'UTF-8'); ?>";
-        }, $html);
-    }
-
-    private function executeTemplate($cacheFile,array $data) {
-        extract($data);
+    private function generateOutput(string $phpCode, array $data): string
+    {
+        extract($data, EXTR_SKIP);
         ob_start();
-        include $cacheFile;
+
+        try {
+            eval('?>' . $phpCode);
+        } catch (Throwable $e) {
+            ob_end_clean();
+            throw new Exception("Template rendering failed: " . $e->getMessage());
+        }
+
         return ob_get_clean();
     }
-
-
 }
